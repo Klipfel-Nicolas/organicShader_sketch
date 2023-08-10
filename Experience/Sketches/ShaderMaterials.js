@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass';
+
 import Experience from '../Experience';
 
 import { SoftGlitchPass } from '../shader/passes/SoftGlitch';
@@ -12,6 +14,9 @@ import fragmentMain from '../shader/organicSplitShaders/fragment_main.glsl'
 
 import vertexAudio from '../shader/audioShaders/vertexAudio.glsl'
 import fragmentAudio from '../shader/audioShaders/fragmentAudio.glsl'
+
+import vertexDisplex from '../shader/displexShaders/vertexDisplex.glsl'
+import fragmentDisplex from '../shader/displexShaders/fragmentDisplex.glsl'
 
 
 export default class ShaderMaterials {
@@ -72,6 +77,27 @@ export default class ShaderMaterials {
     }
 
     /**
+     * Displex material
+     */
+    createDisplexMaterial() {
+        this.displexMaterial = new THREE.ShaderMaterial({
+            vertexShader: vertexDisplex,
+            fragmentShader: fragmentDisplex,
+            side: THREE.DoubleSide,
+            wireframe: false,
+            uniforms: {
+              uTime: { value: 0 },
+              uResolution: { value: new THREE.Vector2() },
+              uDisplace: { value: 2 },
+              uSpread: { value: 1.2 },
+              uNoise: { value: 16 },
+            },
+        })
+
+        return this.displexMaterial
+    }
+
+    /**
      * Add some wireframe lines around mesh
      * @param {THREE.geometry} geometry 
      * @param {THREE.material} material 
@@ -84,6 +110,17 @@ export default class ShaderMaterials {
         mesh.add(this.wireLines);
     }
 
+    addPostProcessingComposer() {
+        this.renderScene = new RenderPass( this.experience.scene, this.experience.camera.perspectiveCamera );
+        this.composer = new EffectComposer( this.experience.renderer.renderer );
+        this.composer.addPass( this.renderScene );
+        this.composer.setSize(this.experience.sizes.width, this.experience.sizes.height);
+    }
+
+    /**
+     * Create postprocessing Glitch effect
+     * @returns 
+     */
     createGlitchEffect() {
         this.renderScene = new RenderPass( this.experience.scene, this.experience.camera.perspectiveCamera );
 
@@ -99,6 +136,19 @@ export default class ShaderMaterials {
         return this.softGlitch;
     }
 
+    createBloomPassEffect() {
+        this.addPostProcessingComposer()
+
+        this.bloomPass = new UnrealBloomPass(
+            new THREE.Vector2(window.innerWidth, window.innerHeight),
+            1.4,
+            0.0001,
+            0.01
+          );
+
+          this.composer.addPass(this.bloomPass);
+    }
+
     //RESIZE
     resize() {
     }
@@ -111,6 +161,8 @@ export default class ShaderMaterials {
         //if(this.orgaMaterial) this.orgaMaterial.userData.shader.uniforms.uTime.value = this.time * .04;
         
         if(this.audMaterial) this.audMaterial.uniforms.uTime.value = this.time / 2;
+
+        if(this.displexMaterial) this.displexMaterial.uniforms.uTime.value = this.time;
 
         if(this.composer) {      
             this.composer.render();

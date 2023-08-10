@@ -51,7 +51,8 @@ export default class Page extends EventEmitter {
   }
 
   addEventListeners() {
-    this.playBtn.addEventListener('click',this.onClick.bind(this))
+    if(this.playBtn)this.playBtn.addEventListener('click',this.onClick.bind(this))
+    
 
   }
 

@@ -24,20 +24,27 @@ export default class World extends EventEmitter {
             this.environment = new Environment();
 
 
-            // Organic Object
+            /* ---------------------------------------------------------
+                                Organic Object
+             ---------------------------------------------------------*/
+            /*
             this.shaderClass = new ShaderMaterials();
             this.organicMaterial = this.shaderClass.createOrganicMaterial();
             const geometry = new THREE.SphereGeometry(1, 1000, 1000);
 
             this.sphere = new Objects();
-            /* this.sphere.addMeshObject(
+            this.sphere.addMeshObject(
                 geometry,
                 this.organicMaterial
-            ) */
+            ) 
 
-            this.sphere.addObjectDebug('sphere')
+            this.sphere.addObjectDebug('sphere')*/
 
-            // Audio Object
+            /* ---------------------------------------------------------
+                                Audio Object
+             ---------------------------------------------------------*/                         
+            /*
+            this.shaderClass = new ShaderMaterials();
             this.sphereGeo =  new THREE.SphereGeometry(1, 100, 100);
             this.audioMaterial = this.shaderClass.createAudioMaterial();
             
@@ -45,7 +52,7 @@ export default class World extends EventEmitter {
             this.audioBall.addMeshObject(
                 this.sphereGeo,
                 this.audioMaterial
-            ) 
+            )  
 
             // Wire Lines
             this.shaderClass.addWireLines(this.sphereGeo, this.audioMaterial, this.audioBall.object)
@@ -59,7 +66,22 @@ export default class World extends EventEmitter {
             this.VisualizerAudio.load()       
             this.experience.page.on('play', () => this.VisualizerAudio.sound.play())
             this.experience.page.on('pause', () => this.VisualizerAudio.sound.pause())
+            */
+
+            /* ---------------------------------------------------------
+                                Displex Object
+             ---------------------------------------------------------*/ 
+            this.shaderClass = new ShaderMaterials();
+            this.torusGeo = new THREE.TorusGeometry(1, 0.3, 100, 100)
+            this.displexMaterial = this.shaderClass.createDisplexMaterial()
             
+            this.displexTorus = new Objects();
+            this.displexTorus.addMeshObject(
+                this.torusGeo,
+                this.displexMaterial
+            )
+            
+            this.shaderClass.createBloomPassEffect();
 
      
             this.emit("worldready");
