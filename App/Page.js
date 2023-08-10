@@ -1,9 +1,16 @@
+import { EventEmitter } from "events";
 
-export default class Page {
+export default class Page extends EventEmitter {
   constructor() {
+    super()
+    
     this.page = document.querySelector("#app");
- 
 
+    this.playBtn = document.getElementById('play');
+
+    this.audioStatus = 'pause';
+
+    this.addEventListeners()
   }
 
   /**
@@ -17,20 +24,12 @@ export default class Page {
     return (h[st]||b[st]) / ((h[sh]||b[sh]) - h.clientHeight) * 100;
   }
 
-  
-
-
-
-
+ 
   
   // Events
   onResize() {
    
   }
-
-
- 
-  
 
   // Loop
 
@@ -39,8 +38,20 @@ export default class Page {
   }
 
   // Listeners
+  onClick() {
+
+    if(this.audioStatus == "pause") {
+      this.audioStatus = "play"
+      this.emit("play");
+    }else {
+      this.emit("pause");
+      this.audioStatus = "pause"
+    } 
+    
+  }
 
   addEventListeners() {
+    this.playBtn.addEventListener('click',this.onClick.bind(this))
 
   }
 

@@ -1,43 +1,36 @@
-import * as THREE from 'three'
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import Experience from '../Experience';
 
+import { SoftGlitchPass } from '../shader/passes/SoftGlitch';
 
 import vertexPars from '../shader/organicSplitShaders/vertex_pars.glsl'
 import vertexMain from '../shader/organicSplitShaders/vertex_main.glsl'
 import fragmentPars from '../shader/organicSplitShaders/fragment_pars.glsl'
 import fragmentMain from '../shader/organicSplitShaders/fragment_main.glsl'
 
-import vertexOrganic from '../shader/vertexOrganic.glsl'
-import fragmentOrganic from '../shader/fragmentOrganic.glsl'
+import vertexAudio from '../shader/audioShaders/vertexAudio.glsl'
+import fragmentAudio from '../shader/audioShaders/fragmentAudio.glsl'
+
 
 export default class ShaderMaterials {
     constructor() {
         this.experience = new Experience();
         this.time = this.experience.time.animatedTime;
-
         
     }
 
-    createSimpleMaterial() {
-        this.simpleMaterial = new THREE.ShaderMaterial({
-            vertexShader: vertexOrganic,
-            fragmentShader: fragmentOrganic
-        })
-
-        this.simpleMaterial.uniforms.uTime = { value: 0 }
-
-        return this.simpleMaterial;
-    }
-
+    /**
+     * Organic material
+     * @returns 
+     */
     createOrganicMaterial() {
-
         this.orgaMaterial = new THREE.MeshStandardMaterial({
             onBeforeCompile: (shader) => {
               // storing a reference to the shader object
               this.orgaMaterial.userData.shader = shader
 
-              
-        
               //uniforms
               shader.uniforms.uTime = {value: 0}
         
@@ -63,6 +56,49 @@ export default class ShaderMaterials {
         return this.orgaMaterial;
     }
 
+    /**
+     * Audio material
+     */
+    createAudioMaterial() {
+        this.audMaterial = new THREE.ShaderMaterial({
+            vertexShader: vertexAudio,
+            fragmentShader: fragmentAudio,
+            uniforms: {
+              uTime: {value: 0},
+            }
+          })
+
+          return this.audMaterial;
+    }
+
+    /**
+     * Add some wireframe lines around mesh
+     * @param {THREE.geometry} geometry 
+     * @param {THREE.material} material 
+     * @param {THREE.mesh} mesh 
+     * @param {number} delta 
+     */
+    addWireLines(geometry, material, mesh, delta = 0.015) {
+        this.wireLines = new THREE.LineSegments(geometry, material);
+        this.wireLines.scale.setScalar(1 + delta);
+        mesh.add(this.wireLines);
+    }
+
+    createGlitchEffect() {
+        this.renderScene = new RenderPass( this.experience.scene, this.experience.camera.perspectiveCamera );
+
+        this.softGlitch = new SoftGlitchPass();
+        /* this.softGlitch.factor = 1; */
+
+        this.composer = new EffectComposer( this.experience.renderer.renderer );
+        this.composer.addPass( this.renderScene );
+        this.composer.addPass( this.softGlitch );
+
+        this.composer.setSize(this.experience.sizes.width, this.experience.sizes.height);
+
+        return this.softGlitch;
+    }
+
     //RESIZE
     resize() {
     }
@@ -70,7 +106,14 @@ export default class ShaderMaterials {
     //UPDATE
     update() {
         this.time = this.experience.time.animatedTime;
-        if(this.orgaMaterial) this.orgaMaterial.userData.shader.uniforms.uTime.value = this.time * .04;
-        if(this.simpleMaterial) this.simpleMaterial.uniforms.uTime.value = this.time;
+        
+        // Only if organic is create
+        //if(this.orgaMaterial) this.orgaMaterial.userData.shader.uniforms.uTime.value = this.time * .04;
+        
+        if(this.audMaterial) this.audMaterial.uniforms.uTime.value = this.time / 2;
+
+        if(this.composer) {      
+            this.composer.render();
+        }
     }
 }

@@ -5,7 +5,7 @@ import { EventEmitter } from "events";
 import Environment from '../Scene/Environement';
 import ShaderMaterials from '../Sketches/ShaderMaterials';
 import Objects from './Objects';
-
+import VisualizerAudio from '../Sketches/VisualizerAudio.js';
 
 export default class World extends EventEmitter {
     constructor() {
@@ -23,25 +23,44 @@ export default class World extends EventEmitter {
         this.resources.on("ready", ()=> {
             this.environment = new Environment();
 
-            // Floor
 
-            
-
-            // Sphere Object
+            // Organic Object
             this.shaderClass = new ShaderMaterials();
-            this.shaderMaterial = this.shaderClass.createOrganicMaterial();
-            
-            const geometry = new THREE.IcosahedronGeometry(1, 300);
+            this.organicMaterial = this.shaderClass.createOrganicMaterial();
+            const geometry = new THREE.SphereGeometry(1, 1000, 1000);
 
             this.sphere = new Objects();
-            this.sphere.addMeshObject(
+            /* this.sphere.addMeshObject(
                 geometry,
-                this.shaderMaterial
-            )
+                this.organicMaterial
+            ) */
 
             this.sphere.addObjectDebug('sphere')
-            this.sphere.object.position.set(0, 0, 0);
+
+            // Audio Object
+            this.sphereGeo =  new THREE.SphereGeometry(1, 100, 100);
+            this.audioMaterial = this.shaderClass.createAudioMaterial();
             
+            this.audioBall = new Objects();
+            this.audioBall.addMeshObject(
+                this.sphereGeo,
+                this.audioMaterial
+            ) 
+
+            // Wire Lines
+            this.shaderClass.addWireLines(this.sphereGeo, this.audioMaterial, this.audioBall.object)
+
+            // Glitch effect
+            this.shaderClass.createGlitchEffect();
+    
+
+            // Audio part
+            this.VisualizerAudio = new VisualizerAudio(this.audioBall.object, 'uAudioFrequency');
+            this.VisualizerAudio.load()       
+            this.experience.page.on('play', () => this.VisualizerAudio.sound.play())
+            this.experience.page.on('pause', () => this.VisualizerAudio.sound.pause())
+            
+
      
             this.emit("worldready");
         }); 
@@ -80,6 +99,13 @@ export default class World extends EventEmitter {
 
     //UPDATE
     update() {
-        if(this.shaderMaterial) this.shaderClass.update()
+        if(this.shaderClass) this.shaderClass.update();
+        if(this.VisualizerAudio) this.VisualizerAudio.update();
+
+        if(this.shaderClass && this.shaderClass.softGlitch && this.VisualizerAudio) {
+            const frequence = this.VisualizerAudio.update();
+            
+            this.shaderClass.softGlitch.factor = frequence > 0.6 ? 0.9 : 0.2;
+        } 
     }
 }

@@ -9,6 +9,8 @@ import Debug from './utils/Debug.js';
 import World from './World/World.js';
 import Ressources from './utils/Ressources.js';
 
+import Page from '../App/Page.js';
+
 
 export default class Experience {
     static instance
@@ -29,6 +31,7 @@ export default class Experience {
         this.resources = new Ressources(assets);
         this.world = new World();
         this.renderer = new Renderer();
+        this.page = new Page();
 
         this.time = new Time();
 
